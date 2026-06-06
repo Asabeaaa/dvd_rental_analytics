@@ -1,0 +1,1 @@
+# check what env file was used to start container - docker inspect dvd_rental_postgres | grep -A 10 "Env"
