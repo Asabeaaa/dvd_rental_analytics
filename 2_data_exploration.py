@@ -2,20 +2,15 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
-
-BASE_DIR = os.path.dirname(os.path.abspath("__file__"))
-load_dotenv(os.path.join(BASE_DIR, ".env"))
-
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_NAME = os.getenv("DB_NAME_DVD")
+from settings import settings
 
 POSTGRESQL_ENGINE = create_engine(
-    f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_NAME}"
+    f"postgresql+psycopg2://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:5432/{settings.DB_NAME}"
 )
+
+
+BASE_DIR = os.path.dirname(os.path.abspath("__file__"))
 
 EXPORT_VIZ_DIR = os.path.join(BASE_DIR, "exports", "results")
 EXPORT_TABLES_DIR = os.path.join(BASE_DIR, "exports", "tables")
@@ -25,11 +20,12 @@ os.makedirs(EXPORT_TABLES_DIR, exist_ok=True)
 plt.style.use("seaborn-v0_8-whitegrid")
 sns.set_palette("husl")
 
-TABLES = ["film", "actor", "customer", "rental",
-          "payment", "inventory", "store", "staff"]
+TABLES = ["actor", "store", "address", "category", "city", "country",
+          "customer", "film_actor", "film_category", "inventory",
+          "language", "rental", "staff", "payment", "film"]
 
 
-def load_tables():
+def load_tables() -> dict:
     dataframes = {}
     with POSTGRESQL_ENGINE.begin() as conn:
         for table in TABLES:
@@ -38,19 +34,13 @@ def load_tables():
     return dataframes
 
 
-def inspect_schema(dataframes):
+def inspect_schema(dataframes: dict) -> None:
     for table, df in dataframes.items():
         print(f"\n{table}:")
         df.info()
 
 
-def descriptive_stats(dataframes):
-    for table, df in dataframes.items():
-        print(f"\n{table}:")
-        print(df.describe(include="all"))
-
-
-def missing_values(dataframes):
+def missing_values(dataframes: dict) -> None:
     summary_rows = []
 
     for table, df in dataframes.items():
@@ -63,8 +53,7 @@ def missing_values(dataframes):
             summary_rows.append({
                 "table": table,
                 "column": column,
-                "missing_count": count,
-                "missing_pct": round(count / len(df) * 100, 2)
+                "missing_count": count
             })
 
     if summary_rows:
@@ -72,22 +61,52 @@ def missing_values(dataframes):
             os.path.join(EXPORT_TABLES_DIR, "missing_values.csv"), index=False)
 
 
-def identify_outliers(dataframes):
-    df = dataframes["payment"]
-    q1 = df["amount"].quantile(0.25)
-    q3 = df["amount"].quantile(0.75)
-    iqr = q3 - q1
-    outliers = df[(df["amount"] < q1 - 1.5 * iqr) |
-                  (df["amount"] > q3 + 1.5 * iqr)].copy()
+def identify_outliers(dataframes: dict) -> None:
+    checks = {
+        "payment": "amount",
+        "film": "rental_rate"
+    }
 
-    print(f"\npayment outliers (IQR method): {len(outliers)} rows")
-    print(outliers["amount"].describe())
+    summary_rows = []
 
-    outliers.to_csv(
+    for table, column in checks.items():
+        df = dataframes[table]
+        q1 = df[column].quantile(0.25)
+        q3 = df[column].quantile(0.75)
+        iqr = q3 - q1
+        lower = round(q1 - 1.5 * iqr, 2)
+        upper = round(q3 + 1.5 * iqr, 2)
+
+        above = df[df[column] > upper]
+        below = df[df[column] < lower]
+
+        print(f"\n{table}.{column} outliers:")
+        print(f"  lower bound: {lower}, upper bound: {upper}")
+        if not above.empty:
+            print(above[[column]])
+        if not below.empty:
+            print(below[[column]])
+
+        summary_rows.append({
+            "table": table,
+            "column": column,
+            "lower_bound": lower,
+            "upper_bound": upper,
+            "count_above_upper": len(above),
+            "count_below_lower": len(below),
+        })
+
+    pd.DataFrame(summary_rows).to_csv(
         os.path.join(EXPORT_TABLES_DIR, "outliers.csv"), index=False)
 
 
-def plot_rentals_by_month(dataframes):
+def descriptive_stats(dataframes: dict):
+    for table, df in dataframes.items():
+        print(f"\n{table}:")
+        print(df.describe(include="all"))
+
+
+def plot_rentals_by_month(dataframes: dict) -> None:
     df = dataframes["rental"].copy()
     df["month"] = pd.to_datetime(
         df["rental_date"]).dt.to_period("M").dt.to_timestamp()
@@ -106,7 +125,7 @@ def plot_rentals_by_month(dataframes):
     plt.close()
 
 
-def plot_payment_distribution(dataframes):
+def plot_payment_distribution(dataframes: dict) -> None:
     df = dataframes["payment"]
 
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -122,7 +141,7 @@ def plot_payment_distribution(dataframes):
     plt.close()
 
 
-def plot_top_customers(dataframes):
+def plot_top_customers(dataframes: dict) -> None:
     payments = dataframes["payment"]
     customers = dataframes["customer"]
 
@@ -147,19 +166,50 @@ def plot_top_customers(dataframes):
     plt.close()
 
 
-def plot_film_rating_distribution(dataframes):
-    df = dataframes["film"]
+def plot_rentals_by_day_of_week(dataframes: dict) -> None:
+    df = dataframes["rental"].copy()
+    df["day_of_week"] = pd.to_datetime(df["rental_date"]).dt.day_name()
+
+    ordered_days = ["Monday", "Tuesday", "Wednesday",
+                    "Thursday", "Friday", "Saturday", "Sunday"]
+    day_counts = df["day_of_week"].value_counts().reindex(
+        ordered_days).reset_index()
+    day_counts.columns = ["day_of_week", "rentals"]
 
     fig, ax = plt.subplots(figsize=(10, 5))
-    rating_counts = df["rating"].value_counts().reset_index()
-    sns.barplot(data=rating_counts, x="rating", y="count", ax=ax)
-    ax.set_title("Film Count by Rating", fontsize=14, fontweight="bold")
-    ax.set_xlabel("Rating")
-    ax.set_ylabel("Count")
+    sns.barplot(data=day_counts, x="day_of_week", y="rentals", ax=ax)
+    ax.set_title("Rental Volume by Day of Week",
+                 fontsize=14, fontweight="bold")
+    ax.set_xlabel("Day")
+    ax.set_ylabel("Number of Rentals")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     plt.tight_layout()
-    plt.savefig(os.path.join(EXPORT_VIZ_DIR, "film_rating_distribution.png"),
+    plt.savefig(os.path.join(EXPORT_VIZ_DIR, "rentals_by_day_of_week.png"),
+                dpi=150, bbox_inches="tight")
+    plt.close()
+
+
+def plot_top_rented_films(dataframes: dict) -> None:
+    rental = dataframes["rental"]
+    inventory = dataframes["inventory"]
+    film = dataframes["film"]
+
+    df = rental.merge(
+        inventory[["inventory_id", "film_id"]], on="inventory_id", how="inner")
+    df = df.merge(film[["film_id", "title"]], on="film_id", how="inner")
+    df = df.groupby("title").size().reset_index(
+        name="rental_count").nlargest(15, "rental_count")
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    sns.barplot(data=df, x="rental_count", y="title", ax=ax)
+    ax.set_title("Top 15 Most Rented Films", fontsize=14, fontweight="bold")
+    ax.set_xlabel("Number of Rentals")
+    ax.set_ylabel("Film")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    plt.tight_layout()
+    plt.savefig(os.path.join(EXPORT_VIZ_DIR, "top_rented_films.png"),
                 dpi=150, bbox_inches="tight")
     plt.close()
 
@@ -168,13 +218,16 @@ if __name__ == "__main__":
     dataframes = load_tables()
 
     inspect_schema(dataframes)
-    descriptive_stats(dataframes)
     missing_values(dataframes)
     identify_outliers(dataframes)
+    descriptive_stats(dataframes)
 
+    # plots
     plot_rentals_by_month(dataframes)
+    plot_rentals_by_day_of_week(dataframes)
     plot_payment_distribution(dataframes)
     plot_top_customers(dataframes)
-    plot_film_rating_distribution(dataframes)
+    plot_top_rented_films(dataframes)
 
+    # close connection pool
     POSTGRESQL_ENGINE.dispose()
