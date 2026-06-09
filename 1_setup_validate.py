@@ -1,6 +1,7 @@
+import os
+import pandas as pd
 from sqlalchemy import create_engine, text
 from settings import settings
-
 
 POSTGRESQL_ENGINE = create_engine(
     f"postgresql+psycopg2://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:5432/{settings.DB_NAME}"
@@ -9,6 +10,10 @@ POSTGRESQL_ENGINE = create_engine(
 CRITICAL_TABLES = [
     "film", "customer", "rental", "payment", "inventory", "store"
 ]
+
+EXPORT_TABLES_DIR = os.path.join(os.path.dirname(
+    os.path.abspath("__file__")), "exports", "tables")
+os.makedirs(EXPORT_TABLES_DIR, exist_ok=True)
 
 
 def return_all_tables() -> list:
@@ -56,6 +61,27 @@ def identify_data_quality_issues() -> dict[str, int]:
     return issues
 
 
+def produce_validation_report(tables: list, present: list, missing: list,
+                              row_counts: dict, quality_issues: dict) -> None:
+    rows = []
+    for table in tables:
+        rows.append({
+            "table": table,
+            "is_critical": table in CRITICAL_TABLES,
+            "critical_status": "present" if table in present else ("missing" if table in missing else "n/a"),
+            "row_count": row_counts.get(table),
+            "quality_issues": quality_issues.get(table, 0),
+            "quality_status": "fail" if quality_issues.get(table, 0) > 0 else "pass",
+        })
+
+    report = pd.DataFrame(rows).sort_values(
+        by=["is_critical", "table"], ascending=[False, True])
+    print("\nValidation Report:")
+    print(report.to_string(index=False))
+    report.to_csv(os.path.join(EXPORT_TABLES_DIR,
+                  "validation_report.csv"), index=False)
+
+
 if __name__ == "__main__":
     tables = return_all_tables()
     present, missing = validate_critical_tables(tables)
@@ -66,7 +92,9 @@ if __name__ == "__main__":
     print("Critical tables present:", present)
     print("Critical tables missing:", missing)
     print("Row counts of tables:", row_counts)
-    print("Data quality issues identified: ", quality_issues)
+    print("Data quality issues identified:", quality_issues)
 
-    # close connection pool
+    produce_validation_report(tables, present, missing,
+                              row_counts, quality_issues)
+
     POSTGRESQL_ENGINE.dispose()
