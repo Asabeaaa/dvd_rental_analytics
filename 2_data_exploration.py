@@ -2,8 +2,9 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from settings import settings
+from helper import load_tables
 
 POSTGRESQL_ENGINE = create_engine(
     f"postgresql+psycopg2://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:5432/{settings.DB_NAME}"
@@ -19,19 +20,6 @@ os.makedirs(EXPORT_TABLES_DIR, exist_ok=True)
 
 plt.style.use("seaborn-v0_8-whitegrid")
 sns.set_palette("husl")
-
-TABLES = ["actor", "store", "address", "category", "city", "country",
-          "customer", "film_actor", "film_category", "inventory",
-          "language", "rental", "staff", "payment", "film"]
-
-
-def load_tables() -> dict:
-    dataframes = {}
-    with POSTGRESQL_ENGINE.begin() as conn:
-        for table in TABLES:
-            dataframes[table] = pd.read_sql(
-                text(f"SELECT * FROM {table};"), conn)
-    return dataframes
 
 
 def inspect_schema(dataframes: dict) -> None:
@@ -216,7 +204,7 @@ def plot_top_rented_films(dataframes: dict) -> None:
 
 
 if __name__ == "__main__":
-    dataframes = load_tables()
+    dataframes = load_tables(POSTGRESQL_ENGINE)
 
     inspect_schema(dataframes)
     missing_values(dataframes)
