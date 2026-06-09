@@ -64,7 +64,8 @@ def missing_values(dataframes: dict) -> None:
 def identify_outliers(dataframes: dict) -> None:
     checks = {
         "payment": "amount",
-        "film": "rental_rate"
+        "film": "rental_rate",
+        "film": "replacement_cost"
     }
 
     summary_rows = []
