@@ -1,0 +1,16 @@
+table,is_critical,critical_status,row_count,quality_issues,quality_status
+customer,True,present,599,0,pass
+film,True,present,1000,0,pass
+inventory,True,present,4581,0,pass
+payment,True,present,14596,0,pass
+rental,True,present,16044,0,pass
+store,True,present,2,0,pass
+actor,False,n/a,200,0,pass
+address,False,n/a,603,0,pass
+category,False,n/a,16,0,pass
+city,False,n/a,600,0,pass
+country,False,n/a,109,0,pass
+film_actor,False,n/a,5462,0,pass
+film_category,False,n/a,1000,0,pass
+language,False,n/a,6,0,pass
+staff,False,n/a,2,0,pass
