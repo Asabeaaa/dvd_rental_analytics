@@ -120,7 +120,7 @@ def plot_payment_distribution(dataframes: dict) -> None:
     fig, ax = plt.subplots(figsize=(10, 5))
     sns.histplot(df["amount"], bins=30, kde=True, ax=ax)
     ax.set_title("Payment Amount Distribution", fontsize=14, fontweight="bold")
-    ax.set_xlabel("Amount ($)")
+    ax.set_xlabel("Amount")
     ax.set_ylabel("Frequency")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
@@ -145,7 +145,7 @@ def plot_top_customers(dataframes: dict) -> None:
     sns.barplot(data=df, x="total_spent", y="customer", ax=ax)
     ax.set_title("Top 15 Customers by Total Spend",
                  fontsize=14, fontweight="bold")
-    ax.set_xlabel("Total Spent ($)")
+    ax.set_xlabel("Total Spent")
     ax.set_ylabel("Customer")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
