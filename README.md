@@ -94,7 +94,7 @@ docker build -t dvd_rental_analytics .
 docker run --env-file .env dvd_rental_analytics
 ```
 
-This runs all scripts in order and launches the Streamlit dashboard on port 8501. Make sure **DB_HOST** in your **.env** is set to **dvd_rental_postgres** instead of **127.0.0.1** when running inside Docker, so the container can reach the database over the Docker network.
+This runs all scripts in order and launches the Streamlit dashboard on port 8501. Make sure **DB_HOST** in your **.env** is set to **dvd_rental_postgres** when running inside Docker, so the container can reach the database over the Docker network.
 
 ---
 
