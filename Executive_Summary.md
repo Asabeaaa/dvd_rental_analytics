@@ -26,8 +26,6 @@ Copies of films sit idle while others are constantly in demand. Identifying over
 
 The data is validated and explored before building purpose-built datasets for each area of analysis. Customer, revenue, and inventory themes are analysed independently, with a predictive model layered on top to flag churn risk. Reports are then combined to create a dashboard that brings the key metrics together in one place.
 
----
-
 ## Analytical Questions
 
 ### Customer Intelligence
