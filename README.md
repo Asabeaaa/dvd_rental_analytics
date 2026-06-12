@@ -114,7 +114,7 @@ dvd_rental_analytics/
 ├── .env.example
 ├── README.md
 ├── Executive_Summary.md
-├── Executive_Report.md
+├── Executive_Report.pdf
 └── requirements.txt
 
 ```
