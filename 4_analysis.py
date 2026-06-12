@@ -9,6 +9,10 @@ from advanced_analytics.customer_analytics import (analyse_segmentation, analyse
                                                    analyse_churn_risk, analyse_behavioral_patterns)
 from advanced_analytics.revenue_optimization import (analyse_category_performance, analyse_temporal_trends,
                                                      analyse_pricing_insights)
+from advanced_analytics.inventory_and_operations import (analyse_turnover, analyse_store_comparison,
+                                                         analyse_stock_efficiency)
+from advanced_analytics.churn_prediction import build_churn_model
+
 
 BASE_DIR = os.path.dirname(os.path.abspath("__file__"))
 
@@ -24,7 +28,7 @@ plt.style.use("seaborn-v0_8-whitegrid")
 sns.set_palette("husl")
 
 
-def load_data():
+def load_data() -> tuple:
     category_revenue = pd.read_csv(
         os.path.join(EXPORT_MERGES_DIR, "category_revenue.csv"),
         parse_dates=["payment_date"]
@@ -33,6 +37,12 @@ def load_data():
         os.path.join(EXPORT_MERGES_DIR, "category_rental_volume.csv"),
         parse_dates=["rental_date"]
     )
+    store_performance = pd.read_csv(
+        os.path.join(EXPORT_MERGES_DIR, "store_performance.csv")
+    )
+    store_category_mix = pd.read_csv(
+        os.path.join(EXPORT_MERGES_DIR, "store_category_mix.csv")
+    )
     dataframes = load_tables(POSTGRESQL_ENGINE)
     customer = dataframes["customer"]
     rental = dataframes["rental"]
@@ -40,21 +50,34 @@ def load_data():
     film_category = dataframes["film_category"]
     category = dataframes["category"]
     payment = dataframes["payment"]
-    return category_revenue, category_rental_volume, customer, rental, inventory, film_category, category, payment
+    film = dataframes["film"]
+    return (category_revenue, category_rental_volume, store_performance,
+            store_category_mix, customer, rental, inventory,
+            film_category, category, payment, film)
 
 
 if __name__ == "__main__":
-    category_revenue, category_rental_volume, customer, rental, inventory, film_category, category, payment = load_data()
+    (category_revenue, category_rental_volume, store_performance,
+     store_category_mix, customer, rental, inventory,
+     film_category, category, payment, film) = load_data()
 
-    # # customer analytics
-    # analyse_segmentation(payment)
-    # analyse_lifetime_value(customer, payment, rental)
-    # analyse_churn_risk(customer, rental)
-    # analyse_behavioral_patterns(customer, rental, payment)
+    # customer analytics
+    analyse_segmentation(payment)
+    analyse_lifetime_value(customer, payment, rental)
+    analyse_churn_risk(customer, rental)
+    analyse_behavioral_patterns(customer, rental, payment)
 
-    # # revenue optimization
-    # analyse_category_performance(category_revenue, category_rental_volume)
-    # analyse_temporal_trends(category_rental_volume)
+    # revenue optimization
+    analyse_category_performance(category_revenue, category_rental_volume)
+    analyse_temporal_trends(category_rental_volume)
     analyse_pricing_insights(category_revenue, category_rental_volume)
+
+    # inventory and operations
+    analyse_turnover(rental, inventory, film)
+    analyse_store_comparison(store_performance, store_category_mix)
+    analyse_stock_efficiency(rental, inventory, film)
+
+    # predictive modeling
+    build_churn_model()
 
     POSTGRESQL_ENGINE.dispose()
