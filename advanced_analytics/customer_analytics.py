@@ -81,7 +81,7 @@ def analyse_lifetime_value(customer: pd.DataFrame, payment: pd.DataFrame, rental
     df["customer_lifespan"] = df["customer_lifespan"].replace(0, 1 / 365)
 
     df["clv"] = (df["average_purchase_value"] *
-                 df["purchase_frequency"] * df["customer_lifespan"]).round(4)
+                 df["purchase_frequency"] * df["customer_lifespan"]).round(2)
 
     df = df.merge(
         customer[["customer_id", "first_name", "last_name"]],
@@ -91,14 +91,15 @@ def analyse_lifetime_value(customer: pd.DataFrame, payment: pd.DataFrame, rental
     df = df.drop(columns=["first_name", "last_name"])
 
     top_10 = df.nlargest(10, "clv")[
-        ["customer_name", "average_purchase_value",
+        ["customer_id", "customer_name", "average_purchase_value",
             "purchase_frequency", "customer_lifespan", "clv"]
     ]
 
     print("\nCustomer Lifetime Value (top 10):")
     print(top_10.to_string(index=False))
-    top_10.to_csv(os.path.join(EXPORT_TABLES_DIR,
-                  "customer_ltv.csv"), index=False)
+
+    df.to_csv(os.path.join(EXPORT_TABLES_DIR,
+              "customer_ltv.csv"), index=False)
 
     fig, ax = plt.subplots(figsize=(10, 5))
     sns.histplot(df["clv"], bins=30, kde=True, ax=ax)
@@ -143,9 +144,12 @@ def analyse_churn_risk(customer: pd.DataFrame, rental: pd.DataFrame) -> None:
     print("\nChurn Risk:")
     print(summary.to_string(index=False))
 
+    df.to_csv(os.path.join(
+        EXPORT_TABLES_DIR, "customer_churn_risk.csv"), index=False)
+
     at_risk_churned = df[df["churn_risk"].isin(["at_risk", "churned"])]
     at_risk_churned.to_csv(os.path.join(
-        EXPORT_TABLES_DIR, "customer_churn_risk.csv"), index=False)
+        EXPORT_TABLES_DIR, "customer_churn_risk_flagged.csv"), index=False)
 
     fig, ax = plt.subplots(figsize=(8, 5))
     sns.barplot(data=summary, x="churn_risk", y="customer_count", ax=ax)
