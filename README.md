@@ -135,30 +135,30 @@ The DVD rental dataset models a physical video rental store with 15 tables.
 
 | Table | Description |
 |---|---|
-| `film` | Film catalogue. Includes title, rental rate, rental duration, replacement cost, and rating. |
-| `customer` | Registered customers. Includes name, email, store assignment, and active status. |
-| `rental` | One row per rental transaction. Links a customer to an inventory item with rental and return dates. |
-| `payment` | One row per payment. Linked to a rental, records the amount and payment date. |
-| `inventory` | Physical copies of films. Each copy is assigned to a store. |
-| `store` | Store records. Each store has a managing staff member and an address. |
+| **film** | Film catalogue. Includes title, rental rate, rental duration, replacement cost, and rating. |
+| **customer** | Registered customers. Includes name, email, store assignment, and active status. |
+| **rental** | One row per rental transaction. Links a customer to an inventory item with rental and return dates. |
+| **payment** | One row per payment. Linked to a rental, records the amount and payment date. |
+| **inventory** | Physical copies of films. Each copy is assigned to a store. |
+| **store** | Store records. Each store has a managing staff member and an address. |
 
 ### Reference and Bridge Tables
 
 | Table | Description |
 |---|---|
-| `actor` | Actor names. |
-| `film_actor` | Bridge table linking films to actors. |
-| `category` | Film categories such as Action, Comedy, and Horror. |
-| `film_category` | Bridge table linking films to categories. |
-| `language` | Languages. Referenced by film. |
-| `staff` | Staff members. Each is assigned to a store. |
-| `address` | Addresses for customers, staff, and stores. |
-| `city` | Cities. Referenced by address. |
-| `country` | Countries. Referenced by city. |
+| **actor** | Actor names. |
+| **film_actor** | Bridge table linking films to actors. |
+| **category** | Film categories such as Action, Comedy, and Horror. |
+| **film_category** | Bridge table linking films to categories. |
+| **language** | Languages. Referenced by film. |
+| **staff** | Staff members. Each is assigned to a store. |
+| **address** | Addresses for customers, staff, and stores. |
+| **city** | Cities. Referenced by address. |
+| **country** | Countries. Referenced by city. |
 
 ### Key Relationships
 
-`rental` is the central transaction table. Every rental links a `customer` to an `inventory` item. `inventory` connects to `film` and `store`. `payment` is recorded separately and links back to `rental`, which means a rental row can exist without a corresponding payment row if the customer has not yet returned the film.
+**rental** is the central transaction table. Every rental links a **customer** to an **inventory** item. **inventory** connects to **film** and **store**. **payment** is recorded separately and links back to **rental**, which means a rental row can exist without a corresponding payment row if the customer has not yet returned the film.
 
 ---
 
@@ -166,15 +166,15 @@ The DVD rental dataset models a physical video rental store with 15 tables.
 
 | Theme | File | Key Outputs |
 |---|---|---|
-| Customer Segmentation | `customer_analytics.py` | `customer_segments.csv` |
-| Lifetime Value | `customer_analytics.py` | `customer_ltv.csv` |
-| Churn Risk | `customer_analytics.py` | `customer_churn_risk.csv` |
-| Behavioral Patterns | `customer_analytics.py` | `customer_pending_returns.csv` |
-| Category Performance | `revenue_optimization.py` | `category_performance.csv` |
-| Temporal Trends | `revenue_optimization.py` | `temporal_trends.csv` |
-| Pricing Insights | `revenue_optimization.py` | `pricing_insights.csv` |
-| Film Turnover | `inventory_operations.py` | `film_turnover.csv` |
-| Store Comparison | `inventory_operations.py` | `store_comparison.csv` |
-| Stock Efficiency | `inventory_operations.py` | `overstocked_films.csv`, `understocked_films.csv` |
-| Churn Prediction | `churn_prediction.py` | `churn_predictions.csv` |
+| **Customer Segmentation** | customer_analytics.py | customer_segments.csv |
+| **Lifetime Value** | customer_analytics.py | customer_ltv.csv |
+| **Churn Risk** | customer_analytics.py | customer_churn_risk.csv |
+| **Behavioral Patterns** | customer_analytics.py | customer_pending_returns.csv |
+| **Category Performance** | revenue_optimization.py | category_performance.csv |
+| **Temporal Trends** | revenue_optimization.py | temporal_trends.csv |
+| **Pricing Insights** | revenue_optimization.py | pricing_insights.csv |
+| **Turnover Analysis** | inventory_operations.py | film_turnover.csv |
+| **Store Comparison** | inventory_operations.py | store_comparison.csv |
+| **Stock Efficiency** | inventory_operations.py | overstocked_films.csv, understocked_films.csv |
+| **Churn Prediction** | churn_prediction.py | churn_predictions.csv |
 
