@@ -85,6 +85,19 @@ streamlit run 5_dashboard.py    # launch the dashboard
 
 ---
 
+## Docker
+
+To build and run the full pipeline in a container:
+
+```bash
+docker build -t dvd_rental_analytics .
+docker run --env-file .env dvd_rental_analytics
+```
+
+This runs all scripts in order and launches the Streamlit dashboard on port 8501. Make sure **DB_HOST** in your **.env** is set to **dvd_rental_postgres** instead of **127.0.0.1** when running inside Docker, so the container can reach the database over the Docker network.
+
+---
+
 ## Project Structure
 
 ```
@@ -102,7 +115,8 @@ dvd_rental_analytics/
 │   ├── tables/
 │   └── visualizations/
 ├── scripts/
-│   └── 00_restore_dvdrental_docker.sh
+│   ├── 00_restore_dvdrental_docker.sh
+│   └── run.sh
 ├── 1_setup_validate.py
 ├── 2_data_exploration.py
 ├── 3_data_relationships.py
@@ -111,6 +125,7 @@ dvd_rental_analytics/
 ├── helper.py
 ├── settings.py
 ├── docker-compose.yml
+├── Dockerfile
 ├── .env.example
 ├── README.md
 ├── Executive_Summary.md
